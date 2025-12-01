@@ -1,0 +1,12 @@
+<h1>Pizzák listája</h1>
+<ul>
+  <% if (etel && etel.length > 0) { %>
+    <% etel.forEach(pizza => { %>
+      <li>
+        <%= pizza.nev %> - Kategória: <%= pizza.kategorianev %> - Vegetarianus: <%= pizza.vegetarianus ? 'igen' : 'nem' %>
+      </li>
+    <% }) %>
+  <% } else { %>
+    <li>Nincs megjeleníthető pizza.</li>
+  <% } %>
+</ul>

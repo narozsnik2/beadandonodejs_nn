@@ -3,6 +3,9 @@ const app = express();
 const path = require('path');
 const db = require('./db');
 const session = require('express-session');
+const bcrypt = require('bcryptjs');
+
+app.use(express.json());
 
 // Statikus fájlok
 app.use(express.static(path.join(__dirname, 'public')));
@@ -16,12 +19,26 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
 
+
+
+
+
+
 app.use(session({
   secret: 'abcd4321',
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 1000 * 60 * 60 }
 }));
+
+
+
+app.use((req, res, next) => {
+  res.locals.userId = req.session.userId || null;
+  res.locals.username = req.session.username || null;
+  res.locals.isAdmin = req.session.isAdmin || 0;
+  next();
+});
 
 app.use((req, res, next) => {
   const kategoriaQuery = 'SELECT nev FROM kategoria ORDER BY nev';
@@ -101,7 +118,7 @@ app.get('/', (req, res, next) => {
   });
 });
 
-app.get('/pizzak', (req, res) => {
+app.get('/pizzak', (req, res, next) => {
   db.query('SELECT * FROM kategoria', (err, kategorias) => {
     if (err) return next(err);
 
@@ -306,6 +323,86 @@ app.post('/kosar/add-ajax', express.json(), (req, res) => {
   }
 
   res.json(req.session.kosar);
+});
+
+
+
+app.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).send('Minden mezőt ki kell tölteni');
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users (username, email, hash) VALUES (?, ?, ?)';
+db.query(sql, [username, email, hashedPassword], (err, result) => {
+  if (err) return res.status(500).send('Hiba a regisztráció során');
+  res.redirect('/login');
+});
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Hiba a regisztráció során');
+  }
+});
+
+
+
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+
+
+
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  db.query(
+    "SELECT * FROM users WHERE username = ?",
+    [username],
+    async (err, results) => {
+      if (err) return res.status(500).send("Hiba történt");
+      if (results.length === 0) return res.status(401).send("Nincs ilyen felhasználó");
+
+      const user = results[0];
+      const isValid = await bcrypt.compare(password, user.hash); // hash oszlop
+
+      if (!isValid) return res.status(401).send("Helytelen jelszó");
+
+   
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.isAdmin = user.isAdmin === 1 ? 1 : 0;
+
+      res.send("Sikeres bejelentkezés!");
+    }
+  );
+});
+
+
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).send("Hiba történt a kilépés során");
+    res.redirect('/');
+  });
+});
+
+function isLoggedIn(req, res, next) {
+  if (req.session.userId) return next();
+  res.redirect('/login');
+}
+
+function isAdmin(req, res, next) {
+  if (req.session.isAdmin) return next();
+  res.status(403).send("Nincs jogosultságod");
+}
+
+
+app.get('/admin', isAdmin, (req, res) => {
+  res.render('admin');
 });
 
 

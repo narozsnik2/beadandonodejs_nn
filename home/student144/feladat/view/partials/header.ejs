@@ -159,7 +159,9 @@ addToCartBtn.addEventListener('click', function() {
 <li><a href="/contact" class="dropdown-item">Kapcsolat</a></li>
 
 <li><a href="/account" class="dropdown-item">Rendelések</a></li>
-<li><a href="/admin" class="dropdown-item">Admin</a></li>
+<% if (isAdmin) { %>
+    <li><a href="/admin" class="dropdown-item">Admin</a></li>
+  <% } %>
 
               </ul>
             </li>
@@ -168,16 +170,13 @@ addToCartBtn.addEventListener('click', function() {
         
         <div class="col-sm-8 col-lg-2 d-flex gap-5 align-items-center justify-content-center justify-content-sm-end">
           <ul class="d-flex justify-content-end list-unstyled m-0">
-            <li>
-              <a href="#" class="p-2 mx-1">
-                <svg width="24" height="24"><use xlink:href="#user"></use></svg>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="p-2 mx-1">
-                <svg width="24" height="24"><use xlink:href="#wishlist"></use></svg>
-              </a>
-            </li>
+           
+
+
+
+            
+
+
             <li>
                 <a href="/kosar" class="p-2 mx-1">
                   <svg width="24" height="24"><use xlink:href="#shopping-bag"></use></svg>
@@ -185,6 +184,85 @@ addToCartBtn.addEventListener('click', function() {
               </li>
           </ul>
         </div>
+        <div style="position: relative; display: inline-block; margin-left: 20px;">
+            <a href="#" id="accountBtn">
+              <svg width="24" height="24"><use xlink:href="#user"></use></svg>
+            </a>
+          
+            <!-- Dropdown login form -->
+            <div id="loginDropdown" style="display: none; position: absolute; right: 0; top: 30px; background: white; border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000;">
+                <% if (!userId) { %>
+                  <!-- Vendég: bejelentkezés / regisztráció -->
+                  <form id="loginForm">
+                    <input type="text" name="username" placeholder="Felhasználónév" class="form-control mb-2" required>
+                    <input type="password" name="password" placeholder="Jelszó" class="form-control mb-2" required>
+                    <button type="submit" class="btn btn-primary w-100">Bejelentkezés</button>
+                  </form>
+                  <button id="registerBtn" class="btn btn-secondary w-100">Regisztráció</button>
+                <% } else { %>
+                  <!-- Bejelentkezett felhasználó -->
+                  <p>Üdv, <strong><%= username %></strong>!</p>
+                  <a href="/logout" class="btn btn-danger w-100">Kijelentkezés</a>
+                <% } %>
+              </div>
+          </div>
+
+        </div>
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const accountBtn = document.getElementById('accountBtn');
+            const loginDropdown = document.getElementById('loginDropdown');
+            const loginForm = document.getElementById('loginForm');
+          
+            accountBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              loginDropdown.style.display = loginDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+          
+            loginForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const formData = new FormData(loginForm);
+              const data = {
+                username: formData.get('username'),
+                password: formData.get('password')
+              };
+          
+              try {
+                const res = await fetch('/login', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(data)
+                });
+          
+                const text = await res.text();
+                alert(text);
+          
+                if (res.ok) {
+                  loginDropdown.style.display = 'none';
+                  window.location.reload();
+                }
+              } catch (err) {
+                console.error(err);
+                alert("Hiba történt a bejelentkezés során.");
+              }
+            });
+
+
+
+            registerBtn.addEventListener('click', () => {
+    window.location.href = '/register'; 
+  });
+
+          
+            document.addEventListener('click', (e) => {
+              if (!accountBtn.contains(e.target) && !loginDropdown.contains(e.target)) {
+                loginDropdown.style.display = 'none';
+              }
+            });
+          });
+
+
+        </script>
 
       </div>
     </div>

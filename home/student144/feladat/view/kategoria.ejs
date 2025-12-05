@@ -73,14 +73,14 @@
 
    <%- include('partials/header')%>
     
-    <section style="background-image: url('images/banner-1.jpg');background-repeat: no-repeat;background-size: cover;">
+   <section style="background-image: url('/images/banner-1.jpg'); background-repeat: no-repeat; background-size: cover;">
       <div class="container-lg">
         <div class="row">
           <div class="col-lg-6 pt-5 mt-5">
             <h2 class="display-1 ls-1"><span class="fw-bold text-primary">Legízletesebb pizzák</span>  <span class="fw-bold">Pizzaurant</span></h2>
             <p class="fs-4">Válogasson kedvére pizzáink közül.</p>
             <div class="d-flex gap-3">
-              <a href="/pizzak" class="btn btn-primary text-uppercase fs-6 rounded-pill px-4 py-3 mt-3">Megnézem az Étlapot</a>
+              <a href="#" class="btn btn-primary text-uppercase fs-6 rounded-pill px-4 py-3 mt-3">Megnézem az Étlapot</a>
 
             </div>
             <h2 class="display-1 ls-1"><span class="fw-bold text-primary"></span>  <span class="fw-bold"></span></h2>
@@ -94,51 +94,34 @@
     </section>
 
 <!-- KATEGÓRIÁK -->
-
-<section class="py-5 overflow-hidden">
-
-
+<section class="category-list py-5">
+    <div class="container-lg">
+      <h2 class="section-title mb-4">
+        <%= kategoriaNev.charAt(0).toUpperCase() + kategoriaNev.slice(1) %> pizzák
+      </h2>
   
-  <div class="container-lg">
-    <div class="row">
-      <div class="col-md-12">
-
-        <div class="section-header d-flex flex-wrap justify-content-between mb-5">
-          <h2 class="section-title">Kategóriák</h2>
-
-          <div class="d-flex align-items-center">
-            <a href="/pizzak" class="btn btn-primary me-2">Megnézem az Étlapot</a>
-            <div class="swiper-buttons">
-              <button class="swiper-prev category-carousel-prev btn btn-yellow">❮</button>
-              <button class="swiper-next category-carousel-next btn btn-yellow">❯</button>
+      <div class="row">
+        <% pizzas.forEach(pizza => { %>
+          <div class="col-md-3">
+            <div class="product-item text-center">
+              <figure>
+                <img src="/images/category-thumb.jpg" alt="<%= pizza.nev %>" class="img-fluid mb-2">
+              </figure>
+              <h3 class="fs-6 fw-normal"><%= pizza.nev %></h3>
+              <div class="price mb-2"><%= pizza.ar %> Ft</div>
+              <div class="button-area">
+                <form action="/kosar" method="POST">
+                  <input type="hidden" name="pizzanev" value="<%= pizza.nev %>">
+                  <input type="number" name="darab" value="1" min="1" class="form-control mb-2">
+                  <button type="submit" class="btn btn-primary">Megvásárolom</button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-        
+        <% }) %>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-12">
-
-        <div class="category-carousel swiper">
-          <div class="swiper-wrapper">
-
-            <% kategorias.forEach(kat => { %>
-              <a href="/kategoria/<%= kat.nev %>" class="nav-link swiper-slide text-center">
-                <img src="/images/category-thumb.jpg" class="rounded-circle" alt="Category Thumbnail">
-                <h4 class="fs-6 mt-3 fw-normal category-title">
-                  <%= kat.nev.charAt(0).toUpperCase() + kat.nev.slice(1) %>
-                </h4>
-              </a>
-            <% }) %>
-
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
     <!-- KATEGÓRIÁK VÉGE-->
 
@@ -157,7 +140,7 @@
               <h2 class="section-title">Top 10 pizzánk</h2>
 
               <div class="d-flex align-items-center">
-                <a href="/pizzak" class="btn btn-primary me-2">Megnézem az Étlapot</a>
+                <a href="#" class="btn btn-primary me-2">Megnézem az Étlapot</a>
                 <div class="swiper-buttons">
                   <button class="swiper-prev products-carousel-prev btn btn-primary">❮</button>
                   <button class="swiper-next products-carousel-next btn btn-primary">❯</button>
@@ -203,11 +186,11 @@
     <%- include('partials/footer') %>
 
 
-    <script src="js/jquery-1.11.0.min.js"></script>
+    <script src="/js/jquery-1.11.0.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
-    <script src="js/plugins.js"></script>
-    <script src="js/script.js"></script>
+    <script src="/js/plugins.js"></script>
+    <script src="/js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
 
     <script>

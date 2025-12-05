@@ -402,9 +402,74 @@ function isAdmin(req, res, next) {
 
 
 app.get('/admin', isAdmin, (req, res) => {
-  res.render('admin');
+  res.redirect('/admin/orders?page=1');
 });
 
+app.get('/admin/orders', isAdmin, (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  const countQuery = 'SELECT COUNT(*) AS total FROM rendeles';
+  const dataQuery = `
+      SELECT r.az, r.pizzanev, r.darab, r.felvetel
+      FROM rendeles r
+      ORDER BY r.felvetel DESC
+      LIMIT ? OFFSET ?
+  `;
+
+  db.query(countQuery, (err, countResult) => {
+      if (err) return next(err);
+
+      const totalOrders = countResult[0].total;
+      const totalPages = Math.ceil(totalOrders / limit);
+
+      db.query(dataQuery, [limit, offset], (err2, orders) => {
+          if (err2) return next(err2);
+
+          res.render('admin_orders', { orders, page, totalPages });
+      });
+  });
+});
+
+
+
+app.post('/admin/orders/delete', isAdmin, (req, res, next) => {
+  const { id } = req.body;
+
+  db.query('DELETE FROM rendeles WHERE az = ?', [id], (err, result) => {
+      if (err) return next(err);
+      res.redirect('/admin/orders');
+  });
+});
+
+
+
+
+app.get('/admin/orders/edit/:id', isAdmin, (req, res, next) => {
+  const { id } = req.params;
+
+  db.query('SELECT * FROM rendeles WHERE az = ?', [id], (err, results) => {
+      if (err) return next(err);
+      if (results.length === 0) return res.send("Nincs ilyen rendelés");
+
+      res.render('admin_edit_order', { order: results[0] });
+  });
+});
+
+
+
+
+
+app.post('/admin/orders/edit/:id', isAdmin, (req, res, next) => {
+  const { id } = req.params;
+  const { pizzanev, darab } = req.body;
+
+  db.query('UPDATE rendeles SET pizzanev = ?, darab = ? WHERE az = ?', [pizzanev, darab, id], (err, result) => {
+      if (err) return next(err);
+      res.redirect('/admin/orders');
+  });
+});
 
 
 app.use((err, req, res, next) => {

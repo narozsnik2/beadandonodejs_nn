@@ -43,7 +43,33 @@ app.use((req, res, next) => {
 });
 
 
+app.post('/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
 
+  const created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  try {
+    await pool.query(
+      'INSERT INTO contact_messages (name, email, subject, message, created_at) VALUES (?, ?, ?, ?, ?)',
+      [name, email, subject, message, created_at]
+    );
+
+    res.send(`
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="3;url=/contact" />
+        </head>
+        <body style="font-family:sans-serif; text-align:center; padding-top:50px;">
+          <h1>Köszönjük, az üzeneted elküldve!</h1>
+          <p>3 másodperc múlva visszairányítunk a kapcsolati oldalra.</p>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Hiba történt az üzenet mentésekor.');
+  }
+});
 
 app.get('/contact', (req, res) => res.render('contact'));
 
@@ -116,6 +142,9 @@ app.get('/pizzak', (req, res) => {
  
 // });
 
+app.get('/about', (req, res) => {
+  res.render('about')
+});
 
 app.get('/kategoria/:nev', (req, res) => {
   const kategoriaNev = req.params.nev;
@@ -242,6 +271,39 @@ app.post('/kosar/checkout', (req, res) => {
   });
 
 });
+
+app.get('/search', (req, res) => {
+  const q = req.query.q;
+  if (!q || q.trim() === '') return res.json([]);
+
+  const sql = "SELECT nev FROM pizza WHERE nev LIKE ? LIMIT 10";
+  const param = `%${q}%`;
+
+  db.query(sql, [param], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json([]);
+    }
+    res.json(results);
+  });
+});
+
+app.post('/kosar/add-ajax', express.json(), (req, res) => {
+  const { pizzanev, darab } = req.body;
+
+  if (!req.session.kosar) req.session.kosar = [];
+
+  const index = req.session.kosar.findIndex(p => p.pizzanev === pizzanev);
+  if (index !== -1) {
+    req.session.kosar[index].darab += darab;
+  } else {
+    req.session.kosar.push({ pizzanev, darab });
+  }
+
+  res.json(req.session.kosar);
+});
+
+
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

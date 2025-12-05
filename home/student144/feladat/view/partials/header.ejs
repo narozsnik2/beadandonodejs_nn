@@ -5,7 +5,7 @@
         <div class="col-sm-4 col-lg-2 text-center text-sm-start d-flex gap-3 justify-content-center justify-content-md-start">
           <div class="d-flex align-items-center my-3 my-sm-0">
             <a href="/">
-                <img src="/images/logo.svg">
+                <img src="/images/pizzas.png" class="img-fluid" style="max-height: 60px;">
               </a>
           </div>
           <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
@@ -17,20 +17,126 @@
         <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-4">
           <div class="search-bar row bg-light p-2 rounded-4">
             <div class="col-md-4 d-none d-md-block">
-              <select class="form-select border-0 bg-transparent">
-                <option>Összes kategória</option>
-                <option>Apród</option>
-                <option>Főnemes</option>
-                <option>Király</option>
-                <option>Lovag</option>
-                <option>Vegetáriánus</option>
-              </select>
-            </div>
-            <div class="col-11 col-md-7">
-              <form id="search-form" class="text-center" action="index.html" method="post">
-                <input type="text" class="form-control border-0 bg-transparent" placeholder="Pizzák keresése">
-              </form>
-            </div>
+                <select class="form-select border-0 bg-transparent" id="kategoriaSelect">
+                    <option value="/pizzak">Válassz kategóriát!</option>
+                    <option value="/pizzak">Összes kategória</option>
+                    <option value="/kategoria/Apród">Apród</option>
+                  <option value="/kategoria/Főnemes">Főnemes</option>
+                  <option value="/kategoria/Király">Király</option>
+                  <option value="/kategoria/Lovag">Lovag</option>
+                  <option value="/kategoria/Vegetáriánus">Vegetáriánus</option>
+                </select>
+              </div>
+
+              <div class="col-11 col-md-7 position-relative">
+                <input type="text" id="pizzaSearch" class="form-control border-0 bg-transparent" placeholder="Pizzák keresése" autocomplete="off">
+                <div id="searchResults" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+              </div>
+              
+              <div id="addToCartContainer" class="d-none" style="margin-top: 60px;">
+                <input type="number" id="pizzaQty" value="1" min="1" class="form-control mb-2 w-25 d-inline">
+                <button id="addToCartBtn" class="btn btn-primary">Hozzáadom a kosárhoz</button>
+              </div>
+
+              
+              <script>
+            
+            
+            const input = document.getElementById('pizzaSearch');
+const resultsDiv = document.getElementById('searchResults');
+const addToCartContainer = document.getElementById('addToCartContainer');
+const qtyInput = document.getElementById('pizzaQty');
+const addToCartBtn = document.getElementById('addToCartBtn');
+
+let selectedPizza = null;
+
+input.addEventListener('input', function() {
+  const query = this.value.trim();
+  if (!query) {
+    resultsDiv.innerHTML = '';
+    addToCartContainer.classList.add('d-none');
+    selectedPizza = null;
+    return;
+  }
+
+  fetch(`/search?q=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(data => {
+      resultsDiv.innerHTML = '';
+      data.forEach(pizza => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = pizza.nev;
+        item.appendChild(nameSpan);
+
+        const controls = document.createElement('div');
+        controls.className = 'd-flex align-items-center';
+
+        const minusBtn = document.createElement('button');
+        minusBtn.textContent = '−';
+        minusBtn.className = 'btn btn-sm btn-secondary me-1';
+
+        const qtySpan = document.createElement('span');
+        qtySpan.textContent = '1';
+        qtySpan.className = 'mx-1';
+
+        const plusBtn = document.createElement('button');
+        plusBtn.textContent = '+';
+        plusBtn.className = 'btn btn-sm btn-secondary ms-1';
+
+      
+        minusBtn.addEventListener('click', () => {
+          let val = parseInt(qtySpan.textContent);
+          if (val > 1) qtySpan.textContent = val - 1;
+        });
+        plusBtn.addEventListener('click', () => {
+          let val = parseInt(qtySpan.textContent);
+          qtySpan.textContent = val + 1;
+        });
+
+        controls.appendChild(minusBtn);
+        controls.appendChild(qtySpan);
+        controls.appendChild(plusBtn);
+
+        item.appendChild(controls);
+
+        item.addEventListener('click', () => {
+          selectedPizza = pizza.nev;
+          qtyInput.value = parseInt(qtySpan.textContent);
+          addToCartContainer.classList.remove('d-none');
+        });
+
+        resultsDiv.appendChild(item);
+      });
+    });
+});
+
+
+addToCartBtn.addEventListener('click', function() {
+  if (!selectedPizza) return alert('Előbb válassz egy pizzát!');
+
+  const darab = parseInt(qtyInput.value);
+
+  fetch('/kosar/add-ajax', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ pizzanev: selectedPizza, darab })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(`${selectedPizza} hozzáadva a kosárhoz! Összesen: ${data.find(p => p.pizzanev === selectedPizza)?.darab || 0}`);
+    qtyInput.value = 1;
+    input.value = '';
+    addToCartContainer.classList.add('d-none');
+    selectedPizza = null;
+  });
+});
+                </script>
+
+
+
             <div class="col-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0a1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 7-7a7 7 0 0 1-7 7Z"/></svg>
             </div>
@@ -73,13 +179,30 @@
               </a>
             </li>
             <li>
-              <a href="#" class="p-2 mx-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart" aria-controls="offcanvasCart">
-                <svg width="24" height="24"><use xlink:href="#shopping-bag"></use></svg>
-              </a>
-            </li>
+                <a href="/kosar" class="p-2 mx-1">
+                  <svg width="24" height="24"><use xlink:href="#shopping-bag"></use></svg>
+                </a>
+              </li>
           </ul>
         </div>
 
       </div>
     </div>
   </header>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const select = document.getElementById("kategoriaSelect");
+    
+      if (select) {
+        select.addEventListener("change", function () {
+          const url = this.value;
+          if (url && url.trim() !== "") {
+            window.location.href = url;
+          }
+        });
+      }
+    });
+    </script>
+
+    

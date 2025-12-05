@@ -597,3 +597,19 @@ a.btn-link.text-light:after {
 	}
 }
 /* ============ mobile view .end// ============ */
+
+
+
+
+
+.category-carousel .swiper-slide img {
+  width: 120px;   
+  height: 120px;
+  object-fit: cover; 
+}
+
+
+.swiper-slide {
+  width: auto;
+  flex-shrink: 0;
+}

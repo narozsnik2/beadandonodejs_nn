@@ -1,0 +1,48 @@
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar">
+
+    <div class="offcanvas-header justify-content-between">
+      <h4 class="fw-normal text-uppercase fs-6">Kategóriák</h4>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body">
+        <ul class="navbar-nav justify-content-end menu-list list-unstyled d-flex gap-md-3 mb-0">
+      
+          <!-- Összes kategória -->
+          <li class="nav-item border-dashed active">
+            <a href="/pizzak" class="nav-link d-flex align-items-center gap-3 text-dark p-2">
+                <img src="/images/pizzas.png" alt="Összes kategória" width="30" height="30">
+              <span>Összes kategória</span>
+            </a>
+          </li>
+      
+          <!-- Dinamikus kategóriák -->
+          <% kategorias.forEach(kat => { %>
+            <li class="nav-item border-dashed">
+              <a href="/kategoria/<%= kat.nev %>" class="nav-link d-flex align-items-center gap-3 text-dark p-2">
+                <span>
+                    <%= kat.nev.charAt(0).toUpperCase() + kat.nev.slice(1) %>
+                  </span>
+              </a>
+            </li>
+          <% }) %>
+      
+          <!-- Vegetáriánus pizzák -->
+          <li class="nav-item border-dashed">
+            <button class="btn btn-toggle dropdown-toggle w-100 d-flex justify-content-between align-items-center text-dark p-2" data-bs-toggle="collapse" data-bs-target="#vegetar-collapse">
+              <span>Vegetáriánus pizzák</span>
+            </button>
+            <div class="collapse" id="vegetar-collapse">
+              <ul class="btn-toggle-nav list-unstyled fw-normal ps-5 pb-1">
+                <% vegetaris.forEach(vp => { %>
+                  <li class="border-bottom py-2">
+                    <a href="/pizza/<%= vp.nev %>" class="dropdown-item"><%= vp.nev %></a>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          </li>
+      
+        </ul>
+      </div>
+  </div>

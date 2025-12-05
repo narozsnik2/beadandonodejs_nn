@@ -158,10 +158,17 @@ addToCartBtn.addEventListener('click', function() {
 
 <li><a href="/contact" class="dropdown-item">Kapcsolat</a></li>
 
+<% if (user) { %>
+    <li><a href="/contact/messages" class="dropdown-item">Elküldött üzeneteid</a></li>
+  <% } %>
+
 <% if (isAdmin) { %>
     <li><a href="/admin" class="dropdown-item">Admin</a></li>
     <li><a href="/admin/contact" class="dropdown-item">Üzenetek</a></li>
+   
   <% } %>
+
+  
 
               </ul>
             </li>
@@ -201,7 +208,7 @@ addToCartBtn.addEventListener('click', function() {
                   <button id="registerBtn" class="btn btn-secondary w-100">Regisztráció</button>
                 <% } else { %>
                   <!-- Bejelentkezett felhasználó -->
-                  <p>Üdv, <strong><%= username %></strong>!</p>
+                  <p>Üdv, <strong><%= user.username %></strong>!</p>
                   <a href="/logout" class="btn btn-danger w-100">Kijelentkezés</a>
                 <% } %>
               </div>

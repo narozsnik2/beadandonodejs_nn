@@ -34,8 +34,9 @@ app.use(session({
 
 
 app.use((req, res, next) => {
-  res.locals.userId = req.session.userId || null;
+  res.locals.userId = req.session.user ? req.session.user.id : null;
   res.locals.username = req.session.username || null;
+  res.locals.user = req.session.user || null;
   res.locals.isAdmin = req.session.isAdmin || 0;
   next();
 });
@@ -65,10 +66,16 @@ app.post('/contact', async (req, res) => {
 
   const created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+  let userId = req.session.user ? req.session.user.id : null;
+
+
+
+
   try {
     db.query(
-      'INSERT INTO contact_messages (name, email, subject, message, created_at) VALUES (?, ?, ?, ?, ?)',
-      [name, email, subject, message, created_at],
+      `INSERT INTO contact_messages (name, email, subject, message, user_id, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, email, subject, message, userId || null, created_at],
       (err, result) => {
         if (err) {
           console.error(err);
@@ -113,10 +120,29 @@ app.get('/', (req, res, next) => {
     db.query(popularQuery, (err2, popularPizzas) => {
       if (err2) return next(err2);
 
-      res.render('index', { pizzas, popularPizzas });
+      res.render('index', { pizzas, popularPizzas, user: req.session.user });
     });
   });
 });
+
+
+app.get('/contact/messages', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+
+  const userId = req.session.user.id;
+
+  db.query(
+    'SELECT * FROM contact_messages WHERE user_id = ? ORDER BY created_at DESC',
+    [userId],
+    (err, messages) => {
+      if (err) return res.status(500).send('Hiba történt.');
+      res.render('user_messages', { messages });
+    }
+  );
+});
+
+
+
 
 app.get('/pizzak', (req, res, next) => {
   db.query('SELECT * FROM kategoria', (err, kategorias) => {
@@ -338,7 +364,7 @@ app.post('/register', async (req, res) => {
     const sql = 'INSERT INTO users (username, email, hash) VALUES (?, ?, ?)';
 db.query(sql, [username, email, hashedPassword], (err, result) => {
   if (err) return res.status(500).send('Hiba a regisztráció során');
-  res.redirect('/login');
+  res.redirect('/');
 });
   } catch (err) {
     console.error(err);
@@ -373,14 +399,20 @@ app.post('/login', (req, res) => {
       if (!isValid) return res.status(401).send("Helytelen jelszó");
 
    
-      req.session.userId = user.id;
-      req.session.username = user.username;
+      req.session.user = {
+        id: user.id,
+        username: user.username
+      };
+
+
       req.session.isAdmin = user.isAdmin === 1 ? 1 : 0;
 
       res.send("Sikeres bejelentkezés!");
     }
   );
 });
+
+
 
 
 app.get('/logout', (req, res) => {

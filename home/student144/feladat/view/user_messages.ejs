@@ -73,88 +73,31 @@
    <%- include('partials/header')%>
     
    
-
    <div style="margin-left: 30px; margin-right: 30px;">
 
 
-   <h1>Rendelések</h1>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Pizza</th>
-            <th>Darab</th>
-            <th>Felvétel</th>
-            <th>Műveletek</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% orders.forEach(order => { %>
-            <tr>
-                <td><%= order.az %></td>
-                <td><%= order.pizzanev %></td>
-                <td><%= order.darab %></td>
-                <td><%= order.felvetel.toISOString().slice(0,19).replace('T',' ') %></td>
-                <td>
-                    <form action="/admin/orders/delete" method="POST" style="display:inline;">
-                        <input type="hidden" name="id" value="<%= order.az %>">
-                        <button type="submit" class="btn btn-danger btn-sm">Törlés</button>
-                    </form>
-                    <a href="/admin/orders/edit/<%= order.az %>" class="btn btn-primary btn-sm">Szerkesztés</a>
-                </td>
-            </tr>
-        <% }) %>
-    </tbody>
-</table>
-</div>
-
-
-<% 
-  const maxPagesToShow = 8;
-  let startPage = Math.max(1, page - Math.floor(maxPagesToShow / 2));
-  let endPage = startPage + maxPagesToShow - 1;
-  if (endPage > totalPages) {
-    endPage = totalPages;
-    startPage = Math.max(1, endPage - maxPagesToShow + 1);
-  }
-%>
-
-<nav>
-  <ul class="pagination justify-content-center">
-
-    <% if (page > 1) { %>
-
-      <li class="page-item">
-        <a class="page-link" href="/admin/orders?page=1">&laquo;&laquo;</a>
-      </li>
-     
-      <li class="page-item">
-        <a class="page-link" href="/admin/orders?page=<%= page - 1 %>">&laquo;</a>
-      </li>
-    <% } %>
-
-    <% for(let i = startPage; i <= endPage; i++) { %>
-      <li class="page-item <%= i === page ? 'active' : '' %>">
-        <a class="page-link" href="/admin/orders?page=<%= i %>"><%= i %></a>
-      </li>
-    <% } %>
-
-    <% if (page < totalPages) { %>
-    
-      <li class="page-item">
-        <a class="page-link" href="/admin/orders?page=<%= page + 1 %>">&raquo;</a>
-      </li>
-   
-      <li class="page-item">
-        <a class="page-link" href="/admin/orders?page=<%= totalPages %>">&raquo;&raquo;</a>
-      </li>
-    <% } %>
-
-  </ul>
-</nav>
+   <h2>Az üzeneteid</h2>
+   <table class="table table-striped">
+     <thead>
+       <tr>
+         <th>Dátum</th>
+         <th>Tárgy</th>
+         <th>Üzenet</th>
+       </tr>
+     </thead>
+     <tbody>
+       <% messages.forEach(msg => { %>
+         <tr>
+           <td><%= msg.created_at.toISOString().slice(0, 19).replace('T',' ') %></td>
+           <td><%= msg.subject %></td>
+           <td><%= msg.message %></td>
+         </tr>
+       <% }) %>
+     </tbody>
+   </table>
   
 
-
+</div>
 
     
 

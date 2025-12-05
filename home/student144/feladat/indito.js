@@ -49,22 +49,27 @@ app.post('/contact', async (req, res) => {
   const created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
   try {
-    await pool.query(
+    db.query(
       'INSERT INTO contact_messages (name, email, subject, message, created_at) VALUES (?, ?, ?, ?, ?)',
-      [name, email, subject, message, created_at]
+      [name, email, subject, message, created_at],
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).send('Hiba történt az üzenet mentésekor.');
+        }
+        res.send(`
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="3;url=/contact" />
+            </head>
+            <body style="font-family:sans-serif; text-align:center; padding-top:50px;">
+              <h1>Köszönjük, az üzeneted elküldve!</h1>
+              <p>3 másodperc múlva visszairányítunk a kapcsolati oldalra.</p>
+            </body>
+          </html>
+        `);
+      }
     );
-
-    res.send(`
-      <html>
-        <head>
-          <meta http-equiv="refresh" content="3;url=/contact" />
-        </head>
-        <body style="font-family:sans-serif; text-align:center; padding-top:50px;">
-          <h1>Köszönjük, az üzeneted elküldve!</h1>
-          <p>3 másodperc múlva visszairányítunk a kapcsolati oldalra.</p>
-        </body>
-      </html>
-    `);
   } catch (err) {
     console.error(err);
     res.status(500).send('Hiba történt az üzenet mentésekor.');

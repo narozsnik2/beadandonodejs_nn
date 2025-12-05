@@ -472,6 +472,25 @@ app.post('/admin/orders/edit/:id', isAdmin, (req, res, next) => {
 });
 
 
+
+
+
+app.get('/admin/contact', isAdmin, (req, res, next) => {
+  const query = 'SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC';
+  
+  db.query(query, (err, messages) => {
+    if (err) return next(err);
+
+    res.render('admin_contact', { messages });
+  });
+});
+
+
+
+
+
+
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Valami hiba történt!');

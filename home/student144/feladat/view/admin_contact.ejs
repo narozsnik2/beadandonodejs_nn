@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
   <%- include('partials/head') %>
   <body>
-
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <defs>
           <symbol xmlns="http://www.w3.org/2000/svg" id="facebook" viewBox="0 0 24 24"><path fill="currentColor" d="M15.12 5.32H17V2.14A26.11 26.11 0 0 0 14.26 2c-2.72 0-4.58 1.66-4.58 4.7v2.62H6.61v3.56h3.07V22h3.68v-9.12h3.06l.46-3.56h-3.52V7.05c0-1.05.28-1.73 1.76-1.73Z"/></symbol>
@@ -61,7 +60,7 @@
           <symbol xmlns="http://www.w3.org/2000/svg" id="pet" viewBox="0 0 14 14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M1.5 9.5c.552 0 1-.672 1-1.5s-.448-1.5-1-1.5s-1 .672-1 1.5s.448 1.5 1 1.5m3-4.5c.552 0 1-.672 1-1.5S5.052 2 4.5 2s-1 .672-1 1.5s.448 1.5 1 1.5m5 0c.552 0 1-.672 1-1.5S10.052 2 9.5 2s-1 .672-1 1.5s.448 1.5 1 1.5m3 4.5c.552 0 1-.672 1-1.5s-.448-1.5-1-1.5s-1 .672-1 1.5s.448 1.5 1 1.5M10 10c0 1.38-1.62 2-3 2s-3-.62-3-2s1-3.5 3-3.5s3 2.12 3 3.5"/></symbol>
         </defs>
       </svg>
-
+  
     <div class="preloader-wrapper">
       <div class="preloader">
       </div>
@@ -73,118 +72,45 @@
 
    <%- include('partials/header')%>
     
-   <section style="background-image: url('/images/banner-1.jpg'); background-repeat: no-repeat; background-size: cover;">
-      <div class="container-lg">
-        <div class="row">
-          <div class="col-lg-6 pt-5 mt-5">
-            <h2 class="display-1 ls-1"><span class="fw-bold text-primary">Legízletesebb pizzák</span>  <span class="fw-bold">Pizzaurant</span></h2>
-            <p class="fs-4">Válogasson kedvére pizzáink közül.</p>
-            <div class="d-flex gap-3">
-              <a href="/pizzak" class="btn btn-primary text-uppercase fs-6 rounded-pill px-4 py-3 mt-3">Megnézem az Étlapot</a>
+   
 
-            </div>
-            <h2 class="display-1 ls-1"><span class="fw-bold text-primary"></span>  <span class="fw-bold"></span></h2>
+   <div style="margin-left: 30px; margin-right: 30px;">
 
-          </div>
-        </div>
-        
-    
-      
-      </div>
-    </section>
 
-<!-- KATEGÓRIÁK -->
-<div class="container py-5">
-    <h1 class="mb-4">Összes pizza</h1>
-  
-    <% kategorias.forEach(kat => { %>
-      <section class="mb-5">
-        <h2 class="fs-4 fw-bold mb-3">
-          <%= kat.nev.charAt(0).toUpperCase() + kat.nev.slice(1) %>
-        </h2>
-        <div class="row g-3">
-          <% pizzasByCategory[kat.nev].forEach(pizza => { %>
-            <div class="col-md-4">
-              <div class="card h-100 text-center">
-                <img src="/images/category-thumb.jpg" alt="<%= pizza.nev %>" class="tab-image">
-                <div class="card-body">
-                  <h5 class="card-title">
-                    <%= pizza.nev.charAt(0).toUpperCase() + pizza.nev.slice(1) %>
-                  </h5>
-                  <p class="card-text"><%= kat.ar %> Ft</p>
-  
-                  <!-- Megvásárolom gomb + darabszám input -->
-                  <form action="/kosar" method="POST">
-                    <input type="hidden" name="pizzanev" value="<%= pizza.nev %>">
-                    <input type="number" name="darab" value="1" min="1" class="form-control mb-2">
-                    <button type="submit" class="btn btn-primary w-100">Megvásárolom</button>
-                  </form>
-  
-                </div>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% }) %>
-  </div>
+    <h1>Beérkező üzenetek</h1>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Név</th>
+          <th>Email</th>
+          <th>Üzenet</th>
+          <th>Dátum</th>
+       
+        </tr>
+      </thead>
+      <tbody>
+        <% messages.forEach(msg => { %>
+          <tr>
+            <td><%= msg.id %></td>
+            <td><%= msg.name %></td>
+            <td><%= msg.email %></td>
+            <td><%= msg.message %></td>
+            <td><%= msg.created_at.toISOString().slice(0, 19).replace('T', ' ') %></td>
+            <td>
+              <form action="/admin/contact/delete" method="POST" style="display:inline;">
+                <input type="hidden" name="id" value="<%= msg.id %>">
 
-    <!-- KATEGÓRIÁK VÉGE-->
-
-    
- 
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
 
   
 
-    <section id="popular-products" class="products-carousel">
-      <div class="container-lg overflow-hidden py-5">
-        <div class="row">
-          <div class="col-md-12">
 
-            <div class="section-header d-flex justify-content-between my-4">
-              
-              <h2 class="section-title">Top 10 pizzánk</h2>
-
-              <div class="d-flex align-items-center">
-                <a href="/pizzak" class="btn btn-primary me-2">Megnézem az Étlapot</a>
-                <div class="swiper-buttons">
-                  <button class="swiper-prev products-carousel-prev btn btn-primary">❮</button>
-                  <button class="swiper-next products-carousel-next btn btn-primary">❯</button>
-                </div>
-              </div>
-            </div>
-            
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-
-            <div class="swiper">
-              <div class="swiper-wrapper">
-                <% popularPizzas.forEach(pizza => { %>
-                  <div class="product-item swiper-slide d-flex flex-column align-items-center text-center">
-                    <figure>
-                      <a href="/pizza/<%= pizza.nev %>" title="<%= pizza.nev %>">
-                        <img src="/images/category-thumb.jpg" alt="<%= pizza.nev %>" class="tab-image">
-                      </a>
-                    </figure>
-                    <div class="d-flex flex-column text-center">
-                      <h3 class="fs-6 fw-normal"><%= pizza.nev %></h3>
-                      <div>
-                        <span class="text-dark fw-semibold"><%= pizza.ar %> Ft</span>
-                      </div>
-                      <div class="text-muted mb-2">(Összesen eladva: <%= pizza.total_ordered %> db)</div>
-                    </div>
-                  </div>
-                <% }) %>
-              </div>
-            </div>
-            <!-- / products-carousel -->
-
-          </div>
-        </div>
-      </div>
-    </section>
 
     
 

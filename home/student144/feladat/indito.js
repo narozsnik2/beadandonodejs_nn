@@ -3,6 +3,9 @@ const app = express();
 const path = require('path');
 const db = require('./db');
 const session = require('express-session');
+const bcrypt = require('bcryptjs');
+
+app.use(express.json());
 
 // Statikus fájlok
 app.use(express.static(path.join(__dirname, 'public')));
@@ -16,12 +19,27 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
 
+
+
+
+
+
 app.use(session({
   secret: 'abcd4321',
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 1000 * 60 * 60 }
 }));
+
+
+
+app.use((req, res, next) => {
+  res.locals.userId = req.session.user ? req.session.user.id : null;
+  res.locals.username = req.session.username || null;
+  res.locals.user = req.session.user || null;
+  res.locals.isAdmin = req.session.isAdmin || 0;
+  next();
+});
 
 app.use((req, res, next) => {
   const kategoriaQuery = 'SELECT nev FROM kategoria ORDER BY nev';
@@ -48,10 +66,16 @@ app.post('/contact', async (req, res) => {
 
   const created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+  let userId = req.session.user ? req.session.user.id : null;
+
+
+
+
   try {
     db.query(
-      'INSERT INTO contact_messages (name, email, subject, message, created_at) VALUES (?, ?, ?, ?, ?)',
-      [name, email, subject, message, created_at],
+      `INSERT INTO contact_messages (name, email, subject, message, user_id, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, email, subject, message, userId || null, created_at],
       (err, result) => {
         if (err) {
           console.error(err);
@@ -96,12 +120,31 @@ app.get('/', (req, res, next) => {
     db.query(popularQuery, (err2, popularPizzas) => {
       if (err2) return next(err2);
 
-      res.render('index', { pizzas, popularPizzas });
+      res.render('index', { pizzas, popularPizzas, user: req.session.user });
     });
   });
 });
 
-app.get('/pizzak', (req, res) => {
+
+app.get('/contact/messages', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+
+  const userId = req.session.user.id;
+
+  db.query(
+    'SELECT * FROM contact_messages WHERE user_id = ? ORDER BY created_at DESC',
+    [userId],
+    (err, messages) => {
+      if (err) return res.status(500).send('Hiba történt.');
+      res.render('user_messages', { messages });
+    }
+  );
+});
+
+
+
+
+app.get('/pizzak', (req, res, next) => {
   db.query('SELECT * FROM kategoria', (err, kategorias) => {
     if (err) return next(err);
 
@@ -307,6 +350,176 @@ app.post('/kosar/add-ajax', express.json(), (req, res) => {
 
   res.json(req.session.kosar);
 });
+
+
+
+app.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).send('Minden mezőt ki kell tölteni');
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users (username, email, hash) VALUES (?, ?, ?)';
+db.query(sql, [username, email, hashedPassword], (err, result) => {
+  if (err) return res.status(500).send('Hiba a regisztráció során');
+  res.redirect('/');
+});
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Hiba a regisztráció során');
+  }
+});
+
+
+
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+
+
+
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  db.query(
+    "SELECT * FROM users WHERE username = ?",
+    [username],
+    async (err, results) => {
+      if (err) return res.status(500).send("Hiba történt");
+      if (results.length === 0) return res.status(401).send("Nincs ilyen felhasználó");
+
+      const user = results[0];
+      const isValid = await bcrypt.compare(password, user.hash); // hash oszlop
+
+      if (!isValid) return res.status(401).send("Helytelen jelszó");
+
+   
+      req.session.user = {
+        id: user.id,
+        username: user.username
+      };
+
+
+      req.session.isAdmin = user.isAdmin === 1 ? 1 : 0;
+
+      res.send("Sikeres bejelentkezés!");
+    }
+  );
+});
+
+
+
+
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).send("Hiba történt a kilépés során");
+    res.redirect('/');
+  });
+});
+
+function isLoggedIn(req, res, next) {
+  if (req.session.userId) return next();
+  res.redirect('/login');
+}
+
+function isAdmin(req, res, next) {
+  if (req.session.isAdmin) return next();
+  res.status(403).send("Nincs jogosultságod");
+}
+
+
+app.get('/admin', isAdmin, (req, res) => {
+  res.redirect('/admin/orders?page=1');
+});
+
+app.get('/admin/orders', isAdmin, (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  const countQuery = 'SELECT COUNT(*) AS total FROM rendeles';
+  const dataQuery = `
+      SELECT r.az, r.pizzanev, r.darab, r.felvetel
+      FROM rendeles r
+      ORDER BY r.felvetel DESC
+      LIMIT ? OFFSET ?
+  `;
+
+  db.query(countQuery, (err, countResult) => {
+      if (err) return next(err);
+
+      const totalOrders = countResult[0].total;
+      const totalPages = Math.ceil(totalOrders / limit);
+
+      db.query(dataQuery, [limit, offset], (err2, orders) => {
+          if (err2) return next(err2);
+
+          res.render('admin_orders', { orders, page, totalPages });
+      });
+  });
+});
+
+
+
+app.post('/admin/orders/delete', isAdmin, (req, res, next) => {
+  const { id } = req.body;
+
+  db.query('DELETE FROM rendeles WHERE az = ?', [id], (err, result) => {
+      if (err) return next(err);
+      res.redirect('/admin/orders');
+  });
+});
+
+
+
+
+app.get('/admin/orders/edit/:id', isAdmin, (req, res, next) => {
+  const { id } = req.params;
+
+  db.query('SELECT * FROM rendeles WHERE az = ?', [id], (err, results) => {
+      if (err) return next(err);
+      if (results.length === 0) return res.send("Nincs ilyen rendelés");
+
+      res.render('admin_edit_order', { order: results[0] });
+  });
+});
+
+
+
+
+
+app.post('/admin/orders/edit/:id', isAdmin, (req, res, next) => {
+  const { id } = req.params;
+  const { pizzanev, darab } = req.body;
+
+  db.query('UPDATE rendeles SET pizzanev = ?, darab = ? WHERE az = ?', [pizzanev, darab, id], (err, result) => {
+      if (err) return next(err);
+      res.redirect('/admin/orders');
+  });
+});
+
+
+
+
+
+app.get('/admin/contact', isAdmin, (req, res, next) => {
+  const query = 'SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY created_at DESC';
+  
+  db.query(query, (err, messages) => {
+    if (err) return next(err);
+
+    res.render('admin_contact', { messages });
+  });
+});
+
+
+
+
 
 
 

@@ -1,1 +1,7 @@
 ECHO is on.
+
+
+db.js
+
+node_modules/
+.env

@@ -79,7 +79,7 @@ input.addEventListener('input', function() {
         minusBtn.className = 'btn btn-sm btn-secondary me-1';
 
         const qtySpan = document.createElement('span');
-        qtySpan.textContent = '1';
+        qtySpan.textContent = '0';
         qtySpan.className = 'mx-1';
 
         const plusBtn = document.createElement('button');
@@ -89,7 +89,7 @@ input.addEventListener('input', function() {
       
         minusBtn.addEventListener('click', () => {
           let val = parseInt(qtySpan.textContent);
-          if (val > 1) qtySpan.textContent = val - 1;
+          if (val > 0) qtySpan.textContent = val - 1;
         });
         plusBtn.addEventListener('click', () => {
           let val = parseInt(qtySpan.textContent);
@@ -127,10 +127,11 @@ addToCartBtn.addEventListener('click', function() {
   .then(res => res.json())
   .then(data => {
     alert(`${selectedPizza} hozzáadva a kosárhoz! Összesen: ${data.find(p => p.pizzanev === selectedPizza)?.darab || 0}`);
-    qtyInput.value = 1;
+    qtyInput.value = 0;
     input.value = '';
     addToCartContainer.classList.add('d-none');
     selectedPizza = null;
+    resultsDiv.innerHTML = '';
   });
 });
                 </script>
@@ -175,29 +176,21 @@ addToCartBtn.addEventListener('click', function() {
           </ul>
         </div>
         
-        <div class="col-sm-8 col-lg-2 d-flex gap-5 align-items-center justify-content-center justify-content-sm-end">
-          <ul class="d-flex justify-content-end list-unstyled m-0">
-           
-
-
-
-            
-
-
-            <li>
-                <a href="/kosar" class="p-2 mx-1">
-                  <svg width="24" height="24"><use xlink:href="#shopping-bag"></use></svg>
-                </a>
-              </li>
-          </ul>
-        </div>
-        <div style="position: relative; display: inline-block; margin-left: 20px;">
+        <div class="col-sm-8 col-lg-2 d-flex gap-3 align-items-center justify-content-end">
+  
+          <!-- Kosár ikon -->
+          <a href="/kosar" class="p-2 mx-1">
+            <svg width="24" height="24"><use xlink:href="#shopping-bag"></use></svg>
+          </a>
+        
+        
+          <div class="position-relative">
             <a href="#" id="accountBtn">
               <svg width="24" height="24"><use xlink:href="#user"></use></svg>
             </a>
-          
-            <!-- Dropdown login form -->
-            <div id="loginDropdown" style="display: none; position: absolute; right: 0; top: 30px; background: white; border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000;">
+        
+            <div id="loginDropdown" 
+                 style="display: none; position: absolute; right: 0; top: 30px; background: white; border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000;">
                 <% if (!userId) { %>
                   <!-- Vendég: bejelentkezés / regisztráció -->
                   <form id="loginForm">
@@ -290,4 +283,31 @@ addToCartBtn.addEventListener('click', function() {
     });
     </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.add-vega-final').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const li = btn.closest('li');
+        const pizza = li.querySelector('.add-vega-btn').dataset.pizzanev;
+        const qty = parseInt(li.querySelector('.vega-qty').value);
+  
+        fetch('/kosar/add-ajax', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pizzanev: pizza, darab: qty })
+        })
+        .then(r => r.json())
+        .then(data => {
+          const kosarItem = data.find(p => p.pizzanev === pizza);
+          const osszes = kosarItem ? kosarItem.darab : qty;
+  
+          alert(`${pizza} hozzáadva a kosárhoz! Összesen: ${osszes}`);
+  
     
+          li.querySelector('.vega-qty').value = 1;
+          li.querySelector('.vega-add-panel').classList.add('d-none');
+        });
+      });
+    });
+  });
+  </script>

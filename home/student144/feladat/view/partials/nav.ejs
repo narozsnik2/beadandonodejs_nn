@@ -29,20 +29,74 @@
       
           <!-- Vegetáriánus pizzák -->
           <li class="nav-item border-dashed">
-            <button class="btn btn-toggle dropdown-toggle w-100 d-flex justify-content-between align-items-center text-dark p-2" data-bs-toggle="collapse" data-bs-target="#vegetar-collapse">
+            <button class="btn btn-toggle dropdown-toggle w-100 d-flex justify-content-between align-items-center text-dark p-2"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#vegetar-collapse">
               <span>Vegetáriánus pizzák</span>
             </button>
+          
             <div class="collapse" id="vegetar-collapse">
-              <ul class="btn-toggle-nav list-unstyled fw-normal ps-5 pb-1">
+              <ul class="btn-toggle-nav list-unstyled fw-normal ps-4 pb-2">
+                
                 <% vegetaris.forEach(vp => { %>
                   <li class="border-bottom py-2">
-                    <a href="/pizza/<%= vp.nev %>" class="dropdown-item"><%= vp.nev %></a>
+          
+                    <div class="d-flex justify-content-between align-items-center">
+                      <a  class="dropdown-item"><%= vp.nev %></a>
+          
+          
+                      <button class="btn btn-sm btn-success add-vega-btn"
+                              data-pizzanev="<%= vp.nev %>">
+                        +
+                      </button>
+                    </div>
+          
+                    <div class="vega-add-panel d-none mt-2 ps-3">
+                      <div class="input-group input-group-sm">
+                        <input type="number" min="1" value="1" class="form-control vega-qty">
+                        <button class="btn btn-primary add-vega-final">Kosárba</button>
+                      </div>
+                    </div>
+          
                   </li>
                 <% }) %>
+          
               </ul>
             </div>
           </li>
+
+<script>
+          document.querySelectorAll('.add-vega-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const panel = btn.closest('li').querySelector('.vega-add-panel');
+              panel.classList.toggle('d-none');
+            });
+          });
+          
+          document.querySelectorAll('.add-vega-final').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const li = btn.closest('li');
+              const pizza = li.querySelector('.add-vega-btn').dataset.pizzanev;
+              const qty = li.querySelector('.vega-qty').value;
+          
+              fetch('/kosar/add-ajax', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ pizzanev: pizza, darab: qty })
+              })
+              .then(r => r.json())
+              .then(data => {
+                alert(`${pizza} hozzáadva a kosárhoz!`);
+          
       
+                li.querySelector('.vega-qty').value = 1;
+                li.querySelector('.vega-add-panel').classList.add('d-none');
+              });
+            });
+          });
+      </script>
+
+
         </ul>
       </div>
   </div>
